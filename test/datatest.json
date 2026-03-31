@@ -1,0 +1,86 @@
+{
+    "freebies": false,
+    "itemTypeStr": "b",
+    "quantity": "1",
+    "simpleItem": "true",
+    "imageInfoDOList": [
+        {
+            "extraInfo": {
+                "isH": "false",
+                "isT": "false",
+                "raw": "false"
+            },
+            "isQrCode": false,
+            "url": "https://img.alicdn.com/imgextra/i4/O1CN01sKhtj81pyzldG2aOE_!!2218194775430-0-fleamarket.jpg",
+            "heightSize": 470,
+            "widthSize": 556,
+            "major": true,
+            "type": 0,
+            "status": "done"
+        }
+    ],
+    "itemTextDTO": {
+        "desc": "爬虫 服务，专业爬虫服务",
+        "title": "爬虫 服务，专业爬虫服务",
+        "titleDescSeparate": false
+    },
+    "itemLabelExtList": [
+        {
+            "channelCateName": "其他技能服务",
+            "valueId": null,
+            "channelCateId": "201454913",
+            "valueName": null,
+            "tbCatId": "201159705",
+            "subPropertyId": null,
+            "labelType": "common",
+            "subValueId": null,
+            "labelId": null,
+            "propertyName": "分类",
+            "isUserClick": "0",
+            "isUserCancel": null,
+            "from": "newPublishChoice",
+            "propertyId": "-10000",
+            "labelFrom": "newPublish",
+            "text": "其他技能服务",
+            "properties": "-10000##分类:201454913##其他技能服务"
+        }
+    ],
+    "itemPriceDTO": {
+        "priceInCent": "30000"
+    },
+    "userRightsProtocols": [
+        {
+            "enable": false,
+            "serviceCode": "AI_SALE"
+        },
+        {
+            "enable": false,
+            "serviceCode": "SKILL_PLAY_NO_MIND"
+        }
+    ],
+    "itemPostFeeDTO": {
+        "canFreeShipping": true,
+        "supportFreight": true,
+        "onlyTakeSelf": false
+    },
+    "itemAddrDTO": {
+        "area": "渝北区",
+        "city": "重庆",
+        "divisionId": 500112,
+        "gps": "29.668463,106.565359",
+        "poiId": "B0FFH5BVDE",
+        "poiName": "西部建材城办公楼",
+        "prov": "重庆"
+    },
+    "defaultPrice": false,
+    "itemCatDTO": {
+        "catId": "50023914",
+        "catName": "其他技能服务",
+        "channelCatId": "201454913",
+        "tbCatId": "201159705"
+    },
+    "uniqueCode": "1774493112471956",
+    "sourceId": "pcMainPublish",
+    "bizcode": "pcMainPublish",
+    "publishScene": "pcMainPublish"
+}
