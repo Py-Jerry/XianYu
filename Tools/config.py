@@ -61,6 +61,8 @@ config = {
 
 # 应用配置
 logger.configure(**config)
+
+
 class StableSession:
     session = requests.Session()
     adapter = HTTPAdapter(
@@ -70,6 +72,8 @@ class StableSession:
     )
     session.mount("http://", adapter)
     session.mount("https://", adapter)
+
+
 def _network_request(method, url, **kwargs):
     resp = StableSession.session.request(
         method,
@@ -78,36 +82,43 @@ def _network_request(method, url, **kwargs):
     )
     resp.raise_for_status()
     return resp
+
+
 @retry(
     stop=stop_after_attempt(5),  # 建议重试次数设为 5
-    wait=wait_exponential(multiplier=1, min=2, max=10), # 失败后等待时间稍微拉长，给服务器喘息
+    wait=wait_exponential(multiplier=1, min=2, max=10),  # 失败后等待时间稍微拉长，给服务器喘息
     retry=retry_if_exception_type((
-        requests.exceptions.SSLError,
-        requests.exceptions.ConnectionError,
-        requests.exceptions.ReadTimeout,
-        requests.exceptions.ConnectTimeout,
-        requests.exceptions.ChunkedEncodingError, # 对应 IncompleteRead
-        urllib3.exceptions.IncompleteRead,        # 底层 urllib3 异常
-        urllib3.exceptions.ProtocolError,
-        requests.exceptions.Timeout,  # 覆盖所有 Timeout 子类
-        OSError,  # SSLWantWriteError 的父类
+            requests.exceptions.SSLError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.ChunkedEncodingError,  # 对应 IncompleteRead
+            urllib3.exceptions.IncompleteRead,  # 底层 urllib3 异常
+            urllib3.exceptions.ProtocolError,
+            requests.exceptions.Timeout,  # 覆盖所有 Timeout 子类
+            OSError,  # SSLWantWriteError 的父类
     )),
     reraise=True
 )
 def request_retry(method, url, **kwargs):
     return _network_request(method, url, **kwargs)
 
+
 def request_get(url, **kwargs):
     return request_retry("GET", url, timeout=(5, 30), **kwargs)
+
 
 def request_head(url, **kwargs):
     return request_retry("HEAD", url, timeout=(3, 10), **kwargs)
 
+
 def request_post(url, **kwargs):
     return request_retry("POST", url, timeout=(5, 30), **kwargs)
 
+
 def request_put(url, **kwargs):
     return request_retry("PUT", url, timeout=(10, 120), **kwargs)
+
 
 def taskid(user_id):
     # 算出唯一 ID
