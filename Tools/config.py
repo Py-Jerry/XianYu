@@ -31,7 +31,7 @@ config = {
             ),
         },
         {
-            "sink": f"D:/temp_logs/{time.strftime('%Y-%m-%d')}咸鱼.log",
+            "sink": f"./temp_logs/{time.strftime('%Y-%m-%d')}咸鱼.log",
             "level": "DEBUG",
             "rotation": "1 week",
             "retention": "7 days",
