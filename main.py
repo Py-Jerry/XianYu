@@ -50,13 +50,13 @@ def build_item_with_local_images(image_paths: list[str]) -> PublishItem:
             tb_cat_id="201159705",
         ),
         item_addr=ItemAddr(
-            area="翔安区",
-            city="厦门",
+            area="**",
+            city="**",
             division_id=350213,
-            gps="24.565742,118.223729",
+            gps="***,***",
             poi_id="B0FFLEDOTH",
-            poi_name="厦门双十中学翔安附属学校(振南中学)",
-            prov="福建",
+            poi_name="***",
+            prov="***",
         ),
         item_labels=[
             ItemLabel(
