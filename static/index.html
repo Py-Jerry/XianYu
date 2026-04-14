@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲鱼商品发布</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#ff6a00;--primary-light:#ff8c33;--primary-dark:#cc5500;
+  --bg:#f5f5f5;--card:#fff;--text:#333;--text-light:#888;--border:#e0e0e0;
+  --danger:#e74c3c;--success:#27ae60;--radius:8px;--shadow:0 2px 12px rgba(0,0,0,.08);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.container{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{text-align:center;font-size:1.5rem;margin:20px 0 24px;color:var(--text)}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.card-title{font-size:1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title .icon{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border-radius:4px;font-size:12px;font-weight:700}
+
+/* Image upload area */
+.upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.upload-area:hover,.upload-area.dragover{border-color:var(--primary);background:rgba(255,106,0,.04)}
+.upload-area .hint{color:var(--text-light);font-size:.875rem;margin-top:8px}
+.upload-area .plus{font-size:2rem;color:var(--primary);line-height:1}
+.upload-area input{display:none}
+
+/* Image grid */
+.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px}
+.image-item{position:relative;border-radius:var(--radius);overflow:hidden;aspect-ratio:1;border:2px solid transparent;cursor:grab;transition:border-color .2s}
+.image-item.major{border-color:var(--primary)}
+.image-item img{width:100%;height:100%;object-fit:cover}
+.image-item .badge{position:absolute;top:4px;left:4px;background:var(--primary);color:#fff;font-size:.625rem;padding:2px 6px;border-radius:4px}
+.image-item .actions{position:absolute;top:4px;right:4px;display:flex;gap:4px}
+.image-item .actions button{width:24px;height:24px;border:none;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:#fff;transition:opacity .2s}
+.image-item .actions .btn-del{background:rgba(0,0,0,.5)}
+.image-item .actions .btn-del:hover{background:var(--danger)}
+.image-item .actions .btn-set{background:rgba(0,0,0,.5)}
+.image-item .actions .btn-set:hover{background:var(--primary)}
+.image-item .order-btns{position:absolute;bottom:4px;right:4px;display:flex;gap:2px}
+.image-item .order-btns button{width:22px;height:22px;border:none;border-radius:4px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);color:#fff}
+.image-item .order-btns button:hover{background:rgba(0,0,0,.7)}
+.image-item .progress-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+.image-item .progress-overlay .spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.image-item .status-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.image-item .status-overlay.success{background:rgba(39,174,96,.2)}
+.image-item .status-overlay.fail{background:rgba(231,76,60,.2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Form elements */
+.form-group{margin-bottom:16px}
+.form-group:last-child{margin-bottom:0}
+.form-label{display:block;font-size:.875rem;font-weight:500;margin-bottom:6px;color:var(--text)}
+.form-label .count{float:right;color:var(--text-light);font-weight:400}
+input[type="text"],input[type="number"],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:.875rem;transition:border-color .2s;font-family:inherit}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary)}
+textarea{resize:vertical;min-height:100px}
+.price-row{display:flex;gap:12px}
+.price-row .form-group{flex:1}
+.price-row .input-wrap{position:relative}
+.price-row .input-wrap .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:.875rem}
+.price-row .input-wrap input{padding-right:32px}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Checkbox */
+.checkbox-group{display:flex;align-items:center;gap:8px;font-size:.875rem;cursor:pointer}
+.checkbox-group input[type="checkbox"]{width:16px;height:16px;accent-color:var(--primary)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 24px;border:none;border-radius:var(--radius);font-size:.9375rem;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-light)}
+.btn-primary:active{background:var(--primary-dark)}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--primary);border:1px solid var(--primary)}
+.btn-outline:hover{background:rgba(255,106,0,.06)}
+.btn-block{width:100%}
+.btn-group{display:flex;gap:12px;margin-top:8px}
+
+/* Toast */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);color:#fff;font-size:.875rem;box-shadow:0 4px 16px rgba(0,0,0,.15);animation:slideIn .3s ease;max-width:360px}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast.info{background:#3498db}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.active{opacity:1;pointer-events:auto}
+.modal{background:var(--card);border-radius:var(--radius);padding:24px;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal h3{margin-bottom:12px;font-size:1.0625rem}
+.modal p{color:var(--text-light);font-size:.875rem;margin-bottom:20px}
+.modal .btn-group{justify-content:flex-end}
+
+/* Responsive */
+@media(max-width:480px){
+  .container{padding:12px 8px 32px}
+  .card{padding:16px}
+  .image-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+  .price-row{flex-direction:column;gap:0}
+  h1{font-size:1.25rem}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🐟 闲鱼商品发布</h1>
+
+  <!-- Image Section -->
+  <div class="card">
+    <div class="card-title"><span class="icon">图</span>商品图片</div>
+    <div class="upload-area" id="uploadArea">
+      <div class="plus">+</div>
+      <div class="hint">点击或拖拽上传图片（支持 JPG / PNG）</div>
+      <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/jpg">
+    </div>
+    <div class="image-grid" id="imageGrid"></div>
+  </div>
+
+  <!-- Title & Desc Section -->
+  <div class="card">
+    <div class="card-title"><span class="icon">文</span>商品信息</div>
+    <div class="form-group">
+      <label class="form-label">商品标题 <span class="count" id="titleCount">0/60</span></label>
+      <input type="text" id="titleInput" maxlength="60" placeholder="请输入商品标题">
+    </div>
+    <div class="form-group">
+      <label class="form-label">商品描述 <span class="count" id="descCount">0/600</span></label>
+      <textarea id="descInput" maxlength="600" placeholder="请输入商品描述，支持换行"></textarea>
+    </div>
+  </div>
+
+  <!-- Price Section -->
+  <div class="card">
+    <div class="card-title"><span class="icon">价</span>价格设置</div>
+    <div class="price-row">
+      <div class="form-group">
+        <label class="form-label">售价</label>
+        <div class="input-wrap">
+          <input type="number" id="priceInput" min="0.01" step="0.01" placeholder="0.00">
+          <span class="unit">元</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">原价（选填）</label>
+        <div class="input-wrap">
+          <input type="number" id="origPriceInput" min="0.01" step="0.01" placeholder="0.00">
+          <span class="unit">元</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="checkbox-group">
+        <input type="checkbox" id="freebiesCheck"> 承诺包邮
+      </label>
+    </div>
+  </div>
+
+  <!-- Category Section -->
+  <div class="card">
+    <div class="card-title"><span class="icon">类</span>商品分类</div>
+    <div class="form-group">
+      <label class="form-label">选择分类</label>
+      <select id="categorySelect">
+        <option value="">加载中...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Publish Button -->
+  <div class="btn-group" style="margin-top:4px">
+    <button class="btn btn-outline btn-block" id="saveDraftBtn">保存草稿</button>
+    <button class="btn btn-primary btn-block" id="publishBtn">发布商品</button>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="modalTitle">确认发布</h3>
+    <p id="modalMessage">确认发布该商品到闲鱼？发布后可在闲鱼APP中管理。</p>
+    <div class="btn-group">
+      <button class="btn btn-outline" id="modalCancel">取消</button>
+      <button class="btn btn-primary" id="modalConfirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * 闲鱼商品发布 - 前端逻辑
+ *
+ * 模块划分：
+ *     1. Toast 通知系统 —— 操作反馈
+ *     2. Modal 确认弹窗 —— 发布前二次确认
+ *     3. 分类加载 —— 从后端获取分类预设
+ *     4. 图片管理 —— 上传/预览/删除/排序/主图设置
+ *     5. 表单交互 —— 标题/描述/价格输入与字数统计
+ *     6. 草稿系统 —— localStorage 自动保存/恢复
+ *     7. 发布流程 —— 前端校验 → 确认 → 提交
+ *
+ * 数据流：
+ *     用户操作 → images[] 状态更新 → renderImages() 重渲染
+ *     表单变更 → autoSave() → localStorage
+ *     发布 → validateForm() → /api/publish → 结果反馈
+ *
+ * 扩展点 [EXT-F1]:
+ *     - 图片裁剪功能（上传前裁剪为推荐比例）
+ *     - AI 文案生成（对接 LLM 自动生成标题/描述）
+ *     - 地址选择器（对接地图 API）
+ *     - 批量发布（多商品同时发布）
+ *     - 发布历史记录（localStorage 或后端存储）
+ */
+
+/** localStorage 草稿存储 key */
+const DRAFT_KEY = 'xianyu_publish_draft';
+
+/**
+ * 图片状态数组
+ * 每个元素结构：
+ *     id:         唯一标识（时间戳+随机串）
+ *     file:       原始 File 对象（草稿恢复时为 null）
+ *     preview:    本地预览 Data URL 或远程 URL
+ *     url:        闲鱼 CDN 地址（上传成功后填充）
+ *     heightSize: 图片高度（像素）
+ *     widthSize:  图片宽度（像素）
+ *     status:     状态：pending | uploading | success | fail
+ *     major:      是否为主图
+ */
+let images = [];
+
+/** 分类预设数据（从 /api/categories 获取） */
+let categories = [];
+
+// ===== Toast 通知系统 =====
+
+/**
+ * 显示 Toast 通知
+ *
+ * @param {string} msg      通知文本
+ * @param {string} type     类型：'success' | 'error' | 'info'
+ * @param {number} duration 显示时长（毫秒），默认 3000
+ */
+function showToast(msg, type = 'info', duration = 3000) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, duration);
+}
+
+// ===== Modal 确认弹窗 =====
+
+/**
+ * 显示确认弹窗（Promise 化）
+ *
+ * @param {string} title   弹窗标题
+ * @param {string} message 弹窗内容
+ * @returns {Promise<boolean>} 用户点击确认返回 true，取消返回 false
+ */
+function showModal(title, message) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('confirmModal');
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    overlay.classList.add('active');
+    const onConfirm = () => { cleanup(); resolve(true); };
+    const onCancel = () => { cleanup(); resolve(false); };
+    const cleanup = () => {
+      overlay.classList.remove('active');
+      document.getElementById('modalConfirm').removeEventListener('click', onConfirm);
+      document.getElementById('modalCancel').removeEventListener('click', onCancel);
+    };
+    document.getElementById('modalConfirm').addEventListener('click', onConfirm);
+    document.getElementById('modalCancel').addEventListener('click', onCancel);
+  });
+}
+
+// ===== 分类加载 =====
+
+/**
+ * 从后端加载分类预设列表并填充下拉选择器
+ *
+ * 扩展点 [EXT-F2]: 可增加分类搜索/筛选功能
+ */
+async function loadCategories() {
+  try {
+    const resp = await fetch('/api/categories');
+    const data = await resp.json();
+    categories = data.categories || [];
+    const sel = document.getElementById('categorySelect');
+    sel.innerHTML = '<option value="">请选择分类</option>';
+    categories.forEach((cat, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = cat.cat_name;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    showToast('加载分类失败', 'error');
+  }
+}
+
+// ===== 图片管理 =====
+
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+const imageGrid = document.getElementById('imageGrid');
+
+// 点击上传区域触发文件选择
+uploadArea.addEventListener('click', () => fileInput.click());
+
+// 拖拽相关事件
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+// 文件选择后处理
+fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+/**
+ * 批量处理选中的文件
+ * - 校验文件类型（仅 JPG/PNG）
+ * - 校验文件大小（≤20MB）
+ * - 逐个添加到图片列表并触发上传
+ *
+ * @param {FileList} fileList 用户选择的文件列表
+ */
+function handleFiles(fileList) {
+  for (const file of fileList) {
+    if (!file.type.match(/^image\/(jpeg|png)$/)) {
+      showToast(`不支持的格式: ${file.name}`, 'error');
+      continue;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      showToast(`文件过大: ${file.name}`, 'error');
+      continue;
+    }
+    addImage(file);
+  }
+}
+
+/**
+ * 添加单张图片到列表
+ * - 生成唯一 ID
+ * - 读取本地预览（FileReader → DataURL）
+ * - 第一张自动设为主图
+ * - 触发异步上传
+ *
+ * @param {File} file 图片文件对象
+ */
+function addImage(file) {
+  const id = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = { id, file, preview: e.target.result, url: null, heightSize: 0, widthSize: 0, status: 'pending', major: images.length === 0 };
+    images.push(img);
+    renderImages();
+    uploadImageToServer(img);
+  };
+  reader.readAsDataURL(file);
+}
+
+/**
+ * 将图片上传到闲鱼 CDN
+ * - 使用 FormData 发送文件到 /api/upload
+ * - 更新图片状态：uploading → success/fail
+ * - 成功后保存 url 和尺寸信息
+ *
+ * @param {Object} img 图片状态对象（引用传递，直接修改）
+ */
+async function uploadImageToServer(img) {
+  img.status = 'uploading';
+  renderImages();
+  try {
+    const formData = new FormData();
+    formData.append('file', img.file);
+    const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+    const data = await resp.json();
+    if (data.success) {
+      img.url = data.data.url;
+      img.heightSize = data.data.heightSize;
+      img.widthSize = data.data.widthSize;
+      img.status = 'success';
+      showToast('图片上传成功', 'success');
+    } else {
+      img.status = 'fail';
+      showToast(`上传失败: ${data.message}`, 'error');
+    }
+  } catch (e) {
+    img.status = 'fail';
+    showToast(`上传异常: ${e.message}`, 'error');
+  }
+  renderImages();
+  autoSave();
+}
+
+/**
+ * 删除指定图片
+ * - 若删除的是主图，自动将第一张设为新主图
+ *
+ * @param {string} id 图片唯一 ID
+ */
+function removeImage(id) {
+  images = images.filter(i => i.id !== id);
+  if (images.length > 0 && !images.some(i => i.major)) {
+    images[0].major = true;
+  }
+  renderImages();
+  autoSave();
+}
+
+/**
+ * 设置指定图片为主图
+ * - 取消其他图片的主图标记
+ *
+ * @param {string} id 图片唯一 ID
+ */
+function setMajor(id) {
+  images.forEach(i => i.major = (i.id === id));
+  renderImages();
+  autoSave();
+}
+
+/**
+ * 移动图片位置
+ *
+ * @param {string} id  图片唯一 ID
+ * @param {number} dir 移动方向：-1=前移，+1=后移
+ */
+function moveImage(id, dir) {
+  const idx = images.findIndex(i => i.id === id);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= images.length) return;
+  [images[idx], images[newIdx]] = [images[newIdx], images[idx]];
+  renderImages();
+  autoSave();
+}
+
+/**
+ * 渲染图片网格
+ *
+ * 为每张图片生成 DOM 元素，包含：
+ *   - 缩略图预览
+ *   - 主图标记（badge + 橙色边框）
+ *   - 操作按钮（设为主图 ★ / 删除 ✕）
+ *   - 排序按钮（↑ ↓）
+ *   - 状态覆盖层（上传中 spinner / 成功 ✓ / 失败 ✕）
+ *   - 拖拽排序支持（HTML5 Drag & Drop）
+ *
+ * 扩展点 [EXT-F3]:
+ *   - 可增加图片裁剪入口
+ *   - 可增加图片替换功能（保留位置，更换图片）
+ */
+function renderImages() {
+  imageGrid.innerHTML = '';
+  images.forEach((img, idx) => {
+    const div = document.createElement('div');
+    div.className = `image-item${img.major ? ' major' : ''}`;
+    div.draggable = true;
+    div.dataset.id = img.id;
+
+    div.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', img.id); div.style.opacity = '0.5'; });
+    div.addEventListener('dragend', () => { div.style.opacity = '1'; });
+    div.addEventListener('dragover', (e) => { e.preventDefault(); div.style.borderColor = 'var(--primary)'; });
+    div.addEventListener('dragleave', () => { div.style.borderColor = img.major ? 'var(--primary)' : 'transparent'; });
+    div.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const fromId = e.dataTransfer.getData('text/plain');
+      const toId = img.id;
+      if (fromId === toId) return;
+      const fromIdx = images.findIndex(i => i.id === fromId);
+      const toIdx = images.findIndex(i => i.id === toId);
+      const [moved] = images.splice(fromIdx, 1);
+      images.splice(toIdx, 0, moved);
+      renderImages();
+      autoSave();
+    });
+
+    const imgEl = document.createElement('img');
+    imgEl.src = img.preview;
+    div.appendChild(imgEl);
+
+    if (img.major) {
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.textContent = '主图';
+      div.appendChild(badge);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    if (!img.major) {
+      const setBtn = document.createElement('button');
+      setBtn.className = 'btn-set';
+      setBtn.textContent = '★';
+      setBtn.title = '设为主图';
+      setBtn.onclick = (e) => { e.stopPropagation(); setMajor(img.id); };
+      actions.appendChild(setBtn);
+    }
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-del';
+    delBtn.textContent = '✕';
+    delBtn.title = '删除';
+    delBtn.onclick = (e) => { e.stopPropagation(); removeImage(img.id); };
+    actions.appendChild(delBtn);
+    div.appendChild(actions);
+
+    const orderBtns = document.createElement('div');
+    orderBtns.className = 'order-btns';
+    if (idx > 0) {
+      const upBtn = document.createElement('button');
+      upBtn.textContent = '↑';
+      upBtn.title = '前移';
+      upBtn.onclick = (e) => { e.stopPropagation(); moveImage(img.id, -1); };
+      orderBtns.appendChild(upBtn);
+    }
+    if (idx < images.length - 1) {
+      const downBtn = document.createElement('button');
+      downBtn.textContent = '↓';
+      downBtn.title = '后移';
+      downBtn.onclick = (e) => { e.stopPropagation(); moveImage(img.id, 1); };
+      orderBtns.appendChild(downBtn);
+    }
+    div.appendChild(orderBtns);
+
+    if (img.status === 'uploading') {
+      const overlay = document.createElement('div');
+      overlay.className = 'progress-overlay';
+      overlay.innerHTML = '<div class="spinner"></div>';
+      div.appendChild(overlay);
+    } else if (img.status === 'success') {
+      const overlay = document.createElement('div');
+      overlay.className = 'status-overlay success';
+      overlay.textContent = '✓';
+      div.appendChild(overlay);
+      setTimeout(() => overlay.remove(), 1200);
+    } else if (img.status === 'fail') {
+      const overlay = document.createElement('div');
+      overlay.className = 'status-overlay fail';
+      overlay.textContent = '✕';
+      div.appendChild(overlay);
+    }
+
+    imageGrid.appendChild(div);
+  });
+}
+
+// ===== 表单交互 =====
+
+const titleInput = document.getElementById('titleInput');
+const descInput = document.getElementById('descInput');
+const titleCount = document.getElementById('titleCount');
+const descCount = document.getElementById('descCount');
+
+// 标题输入：实时字数统计 + 自动保存
+titleInput.addEventListener('input', () => {
+  titleCount.textContent = `${titleInput.value.length}/60`;
+  autoSave();
+});
+
+// 描述输入：实时字数统计 + 自动保存
+descInput.addEventListener('input', () => {
+  descCount.textContent = `${descInput.value.length}/600`;
+  autoSave();
+});
+
+// ===== 草稿系统 =====
+
+/**
+ * 自动保存草稿到 localStorage
+ * - 每次表单变更或图片状态变更时触发
+ * - 存储内容：标题、描述、价格、分类、已上传图片的 URL 和尺寸
+ */
+function autoSave() {
+  const data = collectFormData();
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+}
+
+/**
+ * 从 localStorage 恢复草稿
+ * - 恢复文本字段值
+ * - 恢复已上传图片（仅恢复已成功上传的，file 对象无法序列化）
+ * - 恢复分类选择
+ *
+ * 扩展点 [EXT-F4]: 可增加草稿版本管理（多个草稿槽位）
+ */
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.title) titleInput.value = data.title;
+    if (data.desc) descInput.value = data.desc;
+    if (data.price) document.getElementById('priceInput').value = data.price;
+    if (data.origPrice) document.getElementById('origPriceInput').value = data.origPrice;
+    if (data.freebies) document.getElementById('freebiesCheck').checked = data.freebies;
+    if (data.categoryIndex !== undefined && data.categoryIndex !== null) {
+      document.getElementById('categorySelect').value = data.categoryIndex;
+    }
+    titleCount.textContent = `${(data.title || '').length}/60`;
+    descCount.textContent = `${(data.desc || '').length}/600`;
+    if (data.imageUrls && data.imageUrls.length > 0) {
+      data.imageUrls.forEach((imgData, i) => {
+        const id = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        images.push({
+          id,
+          file: null,
+          preview: imgData.url,
+          url: imgData.url,
+          heightSize: imgData.heightSize || 0,
+          widthSize: imgData.widthSize || 0,
+          status: 'success',
+          major: i === 0,
+        });
+      });
+      renderImages();
+    }
+    showToast('已恢复草稿', 'info');
+  } catch (e) { /* ignore */ }
+}
+
+/**
+ * 收集当前表单数据为字典
+ * - 图片仅收集已上传成功的（有 url 的）
+ *
+ * @returns {Object} 表单数据字典
+ */
+function collectFormData() {
+  const catIdx = document.getElementById('categorySelect').value;
+  return {
+    title: titleInput.value,
+    desc: descInput.value,
+    price: document.getElementById('priceInput').value,
+    origPrice: document.getElementById('origPriceInput').value,
+    freebies: document.getElementById('freebiesCheck').checked,
+    categoryIndex: catIdx,
+    imageUrls: images.filter(i => i.url).map(i => ({ url: i.url, heightSize: i.heightSize, widthSize: i.widthSize })),
+  };
+}
+
+// ===== 发布流程 =====
+
+/**
+ * 发布按钮点击处理
+ *
+ * 流程：
+ *   1. 前端表单校验（validateForm）
+ *   2. 弹窗二次确认
+ *   3. 组装请求 payload（含分类、标签、地址、图片等）
+ *   4. POST /api/publish
+ *   5. 成功后清除草稿，失败显示错误信息
+ *
+ * 注意：地址信息当前为硬编码，后续需对接地图 API
+ *       扩展点 [EXT-F5]: 地址选择器
+ */
+document.getElementById('publishBtn').addEventListener('click', async () => {
+  const validation = validateForm();
+  if (validation.length > 0) {
+    showToast(validation[0], 'error');
+    return;
+  }
+  const confirmed = await showModal('确认发布', '确认发布该商品到闲鱼？发布后可在闲鱼APP中管理。');
+  if (!confirmed) return;
+
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  btn.textContent = '发布中...';
+
+  try {
+    const formData = collectFormData();
+    const catIdx = parseInt(formData.categoryIndex);
+    const cat = categories[catIdx] || {};
+    const payload = {
+      title: formData.title,
+      desc: formData.desc,
+      price: formData.price,
+      origPrice: formData.origPrice || null,
+      freebies: formData.freebies,
+      images: images.filter(i => i.url).map(i => ({
+        url: i.url,
+        heightSize: i.heightSize,
+        widthSize: i.widthSize,
+        major: i.major,
+      })),
+      itemCat: {
+        catId: cat.cat_id || '',
+        catName: cat.cat_name || '',
+        channelCatId: cat.channel_cat_id || '',
+        tbCatId: cat.tb_cat_id || '',
+      },
+      itemAddr: {
+        area: "翔安区", city: "厦门", divisionId: 350213,
+        gps: "24.565742,118.223729", poiId: "B0FFLEDOTH",
+        poiName: "厦门双十中学翔安附属学校(振南中学)", prov: "福建",
+      },
+      itemLabels: (cat.labels || []).map(l => ({
+        propertyName: l.property_name,
+        text: l.text,
+        properties: l.properties,
+        channelCateId: l.channel_cate_id,
+        tbCatId: l.tb_cat_id,
+        propertyId: l.property_id,
+        channelCateName: l.channel_cate_name,
+        valueId: l.value_id,
+        valueName: l.value_name,
+      })),
+    };
+
+    const resp = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      showToast('🎉 发布成功！', 'success', 5000);
+      localStorage.removeItem(DRAFT_KEY);
+    } else {
+      showToast(`发布失败: ${data.message}`, 'error', 5000);
+    }
+  } catch (e) {
+    showToast(`请求异常: ${e.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '发布商品';
+  }
+});
+
+// ===== 保存草稿按钮 =====
+document.getElementById('saveDraftBtn').addEventListener('click', () => {
+  autoSave();
+  showToast('草稿已保存', 'success');
+});
+
+// ===== 前端表单校验 =====
+
+/**
+ * 校验表单数据完整性
+ *
+ * 校验规则：
+ *   - 标题：非空，不超过60字符
+ *   - 描述：非空
+ *   - 售价：大于0
+ *   - 原价：不低于售价
+ *   - 图片：至少1张已上传成功，无上传中/失败的图片
+ *   - 分类：已选择
+ *
+ * @returns {string[]} 错误信息列表，空数组表示校验通过
+ */
+function validateForm() {
+  const errors = [];
+  const title = titleInput.value.trim();
+  const desc = descInput.value.trim();
+  const price = document.getElementById('priceInput').value;
+  const origPrice = document.getElementById('origPriceInput').value;
+  const catIdx = document.getElementById('categorySelect').value;
+  const uploadedImages = images.filter(i => i.url);
+
+  if (!title) errors.push('请输入商品标题');
+  else if (title.length > 60) errors.push('标题不能超过60个字符');
+  if (!desc) errors.push('请输入商品描述');
+  if (!price || parseFloat(price) <= 0) errors.push('请输入有效售价');
+  if (origPrice && parseFloat(origPrice) < parseFloat(price)) errors.push('原价不能低于售价');
+  if (uploadedImages.length === 0) errors.push('请至少上传一张图片');
+  if (images.some(i => i.status === 'uploading')) errors.push('图片正在上传中，请稍候');
+  if (images.some(i => i.status === 'fail')) errors.push('有图片上传失败，请删除后重新上传');
+  if (!catIdx && catIdx !== 0 && catIdx !== '0') errors.push('请选择商品分类');
+  return errors;
+}
+
+// ===== 初始化 =====
+// 先加载分类列表，再恢复草稿（草稿中可能包含分类选择）
+loadCategories().then(() => loadDraft());
+</script>
+</body>
+</html>

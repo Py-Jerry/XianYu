@@ -22,24 +22,7 @@ from Tools.config import logger
 
 
 COOKIES = {
-    'cookie2': '10f5a6b2fa49ad1f5af5cfa3e0e7f6ec',
-    'mtop_partitioned_detect': '1',
-    '_m_h5_tk': 'd7ceb821446686b2468651a251e0212c_1776078548849',
-    '_m_h5_tk_enc': 'eabf8e8f6fdc941bc049923933eec099',
-    'xlly_s': '1',
-    '_samesite_flag_': 'true',
-    't': 'fc14e51b8c39739b7e9425478e444a83',
-    '_tb_token_': 'fe5613ee59e6b',
-    'sgcookie': 'E100ZZExh%2FyJe%2BXBjBkGqV7DI30Gu1%2B4%2FdiIejqSmiNOzbZmiascTpw%2BGtY2qhhMVco0kWBtIFXcWzI4YrL11We%2BGAgw0COtkLoFUKBJT7FoK14%3D',
-    'tracknick': 'tb764198236',
-    'csg': '60f9d6dd',
-    'unb': '4109648144',
-    'havana_lgc2_77': 'eyJoaWQiOjQxMDk2NDgxNDQsInNnIjoiZGJlMzZmODE3ZmM4YjQ4NTUzZjEwM2JjYjI4NzM3NzYiLCJzaXRlIjo3NywidG9rZW4iOiIxVFFuZmQzeWc2YkJldVgzTHA2a2VndyJ9',
-    '_hvn_lgc_': '77',
-    'havana_lgc_exp': '1778660136131',
-    'sdkSilent': '1776154538386',
-    'tfstk': 'gMQth3aCUWhtFYUQeVqhomRj4pV3rkfNIO5SoKvic9BdN_kMcNYGHmBGgtxbQFbAps58gEjMIjhNJT3mSRrNGqLDl82urzfabE8bE1PXQ0kw_QHbodOsdFR0mlDipzfN_XTbE84urrFusgpXhtt6ADOMdIg61tiIdpR2GAOj5WCBLpGsChOsdBOJ1cTXlt1Q9IJBhEt1h6Npgp9XrJ2J34vokMgwS20a_33jlwd9vkf6dP1PRCIve11nlqZW6hp51peOIALWDOKO-PHy6M1RLCB4zV86DGsW5Ze8We1PxOOdh8nvdgQNk3bTe0J17KWJ5MeIWETBwsKlxSiJKi1FJHQTqjRFSs_wqUarCKjhwZdAu-zde16OV3_sBg5FraEQ0YvJicNL9mo2fB7-xMEZdhHf6BputEmq0HUv9LVKymo2fBRpEWci0m-Lk',
-}
+    }
 
 
 
@@ -126,12 +109,12 @@ def build_item_with_urls() -> PublishItem:
             tb_cat_id="201159705",
         ),
         item_addr=ItemAddr(
-            area="翔安区",
-            city="厦门",
+            area="***",
+            city="***",
             division_id=350213,
             gps="24.565742,118.223729",
             poi_id="B0FFLEDOTH",
-            poi_name="厦门双十中学翔安附属学校(振南中学)",
+            poi_name="****",
             prov="福建",
         ),
         item_labels=[
